@@ -9,11 +9,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class TransformableJdbcObjectStore extends JdbcListableObjectStore<Serializable> {
-	
+
 	private static final Logger LOG = LoggerFactory.getLogger(TransformableJdbcObjectStore.class);
 
-	Transformer transformer;
-	
+	protected Transformer transformer;
+
 	public Transformer getTransformer() {
 		return transformer;
 	}
@@ -25,13 +25,16 @@ public class TransformableJdbcObjectStore extends JdbcListableObjectStore<Serial
 	@Override
 	public Serializable retrieve(Serializable key) throws ObjectStoreException {
 		Serializable res = super.retrieve(key);
-		try {
-			return (Serializable) transformer.transform(res);
-		} catch (TransformerException e) {
-			e.printStackTrace();
-			LOG.warn("Failed to transform result of object store retrieval to a Serializable. Returning the Serializable retrieved from object store without any transformation");
+		if (transformer == null) {
 			return res;
+		} else {
+			try {
+				return (Serializable) transformer.transform(res);
+			} catch (TransformerException e) {
+				e.printStackTrace();
+				LOG.warn("Failed to transform result of object store retrieval to a Serializable. Returning the Serializable retrieved from object store without any transformation");
+				return res;
+			}
 		}
-
 	}
 }
